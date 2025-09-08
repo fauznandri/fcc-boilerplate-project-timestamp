@@ -20,22 +20,35 @@ app.get("/", function (req, res) {
 
 
 // your first API endpoint... 
-app.get("/api/hello", function (req, res) {
-  res.json({greeting: 'hello API'});
-});
+// app.get("/api/hello", function (req, res) {
+//   res.json({greeting: 'hello API'});
+// });
 
-app.get("/api/date/:date?", function (req, res) {
-  let dateString = req.params.date;
+app.get("/api/:date?", function (req, res) {
+  const dateString = req.params.date;
   let date;
 
-  if (dateString.indexOf('-') > -1) {
-    date = new Date(dateString);
-    res.json({ unix: date.getTime(), utc: date.toUTCString() });
+  // Case 1: If the date parameter is empty, use the current time.
+  if (!dateString) {
+    date = new Date();
   } else {
-    date = new Date(parseInt(dateString));
-    res.json({ unix: date.getTime(), utc: date.toUTCString() });
+    // Case 2: Check if the input is a string of digits (potential Unix timestamp).
+    if (/^\d+$/.test(dateString)) {
+      // Parse the string as an integer. The Date constructor handles numeric timestamps.
+      date = new Date(parseInt(dateString));
+    } else {
+      // Case 3: The input is a standard date string.
+      date = new Date(dateString);
+    }
   }
 
+  // Validate the resulting Date object.
+  // An invalid date will have a time value of NaN (Not-a-Number).
+  if (isNaN(date.getTime())) {
+    res.json({ error: "Invalid Date" });
+  } else {
+    res.json({ unix: date.getTime(), utc: date.toUTCString() });
+  }
 });
 
 
